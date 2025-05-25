@@ -3,20 +3,28 @@
 let messages = [];
 
 export default function handler(req, res) {
-  if (req.method === 'GET') {
-    res.status(200).json(messages);
-  } else if (req.method === 'POST') {
+  const { method } = req;
+
+  if (method === 'GET') {
+    return res.status(200).json(messages);
+  }
+
+  if (method === 'POST') {
     const { text } = req.body;
-    if (!text) {
-      return res.status(400).json({ error: 'Message text is required.' });
+
+    if (!text || typeof text !== 'string' || text.trim() === '') {
+      return res.status(400).json({ error: 'Message text is required and must be a string.' });
     }
+
     const newMessage = {
-      text,
+      text: text.trim(),
       timestamp: Date.now(),
     };
+
     messages.push(newMessage);
-    res.status(201).json(newMessage);
-  } else {
-    res.status(405).json({ error: 'Method not allowed.' });
+    return res.status(201).json(newMessage);
   }
+
+  res.setHeader('Allow', ['GET', 'POST']);
+  res.status(405).json({ error: `Method ${method} not allowed.` });
 }
